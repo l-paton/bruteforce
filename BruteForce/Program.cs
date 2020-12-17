@@ -1,22 +1,22 @@
-﻿using CommandLine;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace BruteForce
 {
-    class Program
+    static class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// Punto de entrada principal para la aplicación.
+        /// </summary>
+        [STAThread]
+        static void Main()
         {
-            try
-            {
-                Parser.Default.ParseArguments<Options>(args).MapResult((Options opts) => Options.Attack(opts), errs => 1);
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
-            
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
         }
     }
 }
