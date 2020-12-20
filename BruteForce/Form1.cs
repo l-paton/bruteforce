@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MihaZupan;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -10,13 +11,15 @@ namespace BruteForce
     public partial class Form1 : Form
     {
 
-        private string file;
-        public static HttpClientHandler handler;
-        public static string url;
-        public static string paramName;
-        public static string paramValue;
-        public static string keyName;
-        public static bool isJson;
+        private string file { get; set; }
+        public string url { get; set; }
+        public string paramName { get; set; }
+        public string paramValue { get; set; }
+        public string keyName { get; set; }
+        public bool isJson { get; set; }
+
+        public string ProxyIP { get; set; }
+        public string ProxyPORT { get; set; }
 
         public Form1()
         {
@@ -27,6 +30,7 @@ namespace BruteForce
         {
            try
             {
+                setParameters();
 
                 if (File.Exists(file))
                 {
@@ -34,6 +38,7 @@ namespace BruteForce
                     foreach (var line in lines)
                     {
                         HttpClient client = null;
+                        var handler = GetHandler();
 
                         if (handler != null)
                         {
@@ -44,16 +49,15 @@ namespace BruteForce
                             client = new HttpClient();
                         }
                         
+                        var json = "{ \"" + paramName + "\" : \"" + paramValue + "\",  " +
+                            " \"" + keyName + "\" : \"" + line + "\"}";
 
                         if (isJson)
                         {
-                            var json = "{ \"" + paramName + "\" : \"" + paramValue + "\",  " +
-                            " \"" + keyName + "\" : \"" + line + "\"}";
                             var content = new StringContent(json, Encoding.UTF8, "application/json");
-                            
                             var r = client.PostAsync(url, content).Result;
                             var c = r.Content.ReadAsStringAsync().Result;
-                            addRowToDataGrid(r, c);
+                            addRowToDataGrid(r, c, json);
                         }
                         else
                         {
@@ -65,7 +69,7 @@ namespace BruteForce
 
                             var r = client.PostAsync(url, content).Result;
                             var c = r.Content.ReadAsStringAsync().Result;
-                            addRowToDataGrid(r, c);
+                            addRowToDataGrid(r, c, json);
                         }
                     }
                 }
@@ -75,9 +79,31 @@ namespace BruteForce
             }
         }
 
-        private void addRowToDataGrid(HttpResponseMessage r, string content)
+        private void addRowToDataGrid(HttpResponseMessage r, string content, string parametros)
         {
-            dataGridView.Rows.Add(r.StatusCode.ToString(), r.Headers, content);
+            dataGridView.Rows.Add(r.StatusCode.ToString(), r.Headers, content, parametros);
+        }
+
+        private HttpClientHandler GetHandler()
+        {
+            try
+            {
+                if(ProxyIP.Length > 0 && ProxyPORT.Length > 0)
+                {
+                    var proxy = new HttpToSocks5Proxy(ProxyIP, Int16.Parse(ProxyPORT));
+                    var handler = new HttpClientHandler { Proxy = proxy };
+                    return handler;
+                }
+                else
+                {
+                    throw new Exception();
+                }
+                
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private void btnSelectFile_Click(object sender, EventArgs e)
@@ -90,16 +116,27 @@ namespace BruteForce
             }
         }
 
-        private void configToolStripMenuItem_Click(object sender, EventArgs e)
+        private void setParameters()
         {
-            ConfigSocks5 configSocks5 = new ConfigSocks5();
-            configSocks5.ShowDialog();
+            if(this.txtParamName.Text.Equals("") || this.txtParamValue.Text.Equals("") || this.txtKeyName.Text.Equals(""))
+            {
+                MessageBox.Show("Rellena bien los campos");
+            }
+            else
+            {
+                paramName = this.txtParamName.Text;
+                paramValue = this.txtParamValue.Text;
+                keyName = this.txtKeyName.Text;
+                isJson = this.checkIsJson.Checked;
+                ProxyIP = this.txtProxyIp.Text;
+                ProxyPORT = this.txtProxyPort.Text;
+            }
         }
 
-        private void victimToolStripMenuItem_Click(object sender, EventArgs e)
+        private void passwordGeneratorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Victim victim = new Victim();
-            victim.ShowDialog();
+            PasswordGenerator passwordGenerator = new PasswordGenerator();
+            passwordGenerator.Show();
         }
     }
 }
