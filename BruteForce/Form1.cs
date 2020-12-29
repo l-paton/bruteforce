@@ -13,12 +13,12 @@ namespace BruteForce
     public partial class Form1 : Form
     {
         public delegate void AddRowToDataGrid(HttpResponseMessage r, string content, string parametros);
-        private string file { get; set; }
-        public string url { get; set; }
-        public string paramName { get; set; }
-        public string paramValue { get; set; }
-        public string keyName { get; set; }
-        public bool isJson { get; set; }
+        public string FilePasswords { get; set; }
+        public string Uri { get; set; }
+        public string ParamName { get; set; }
+        public string ParamValue { get; set; }
+        public string KeyName { get; set; }
+        public bool IsJson { get; set; }
         public string ProxyIP { get; set; }
         public string ProxyPORT { get; set; }
 
@@ -32,26 +32,26 @@ namespace BruteForce
             InitializeComponent();
         }
 
-        private void btnAttack_Click(object sender, EventArgs e)
+        private void BtnAttack_Click(object sender, EventArgs e)
         {
-            setParameters();
+            SetParameters();
 
-            if (comboBox1.SelectedIndex == 1)
-            {
-                Thread thread = new Thread(() => passwordsGeneratedByFile());
-                thread.Start();
-            }
-            else if(comboBox1.SelectedIndex == 0)
+            if (comboBox1.SelectedIndex == 0)
             {
                 var nMin = this.Controls["nMin"] as NumericUpDown;
                 var nMax = this.Controls["nMax"] as NumericUpDown;
 
                 if (nMin != null && nMax != null)
                 {
-                    Thread thread = new Thread(() => 
-                        passwordsGeneratedByRange(int.Parse(nMin.Value.ToString()), int.Parse(nMax.Value.ToString()), this));
+                    Thread thread = new Thread(() =>
+                        PasswordsGeneratedByRange(int.Parse(nMin.Value.ToString()), int.Parse(nMax.Value.ToString()), this));
                     thread.Start();
                 }
+            }
+            else if(comboBox1.SelectedIndex == 1)
+            {
+                Thread thread = new Thread(() => PasswordsGeneratedByFile());
+                thread.Start();
             }
             else
             {
@@ -59,28 +59,28 @@ namespace BruteForce
             }
         }
 
-        private void passwordsGeneratedByFile()
+        private void PasswordsGeneratedByFile()
         {
-            if (File.Exists(file))
+            if (File.Exists(FilePasswords))
             {
-                string[] lines = File.ReadAllLines(file);
+                string[] lines = File.ReadAllLines(FilePasswords);
                 foreach (var line in lines)
                 {
-                    sendRequest(line, this);
+                    SendRequest(line, this);
                 }
             }
         }
 
-        private void passwordsGeneratedByRange(int nMin, int nMax, Form1 form)
+        private void PasswordsGeneratedByRange(int nMin, int nMax, Form1 form)
         {
             for (int i = nMin; i <= nMax; i++)
             {
                 char[] pass = new char[i];
-                recursion(ref pass, 0, i, form);
+                Recursion(ref pass, 0, i, form);
             }
         }
 
-        private void recursion(ref char[] pass, int index, int maxLength, Form1 form)
+        private void Recursion(ref char[] pass, int index, int maxLength, Form1 form)
         {
             for (int i = 0; i < ar.Length; i++)
             {
@@ -88,16 +88,16 @@ namespace BruteForce
 
                 if (index < maxLength - 1)
                 {
-                    recursion(ref pass, index + 1, maxLength, form);
+                    Recursion(ref pass, index + 1, maxLength, form);
                 }
                 else
                 {
-                    sendRequest(String.Concat(pass), form);
+                    SendRequest(String.Concat(pass), form);
                 }
             }
         }
 
-        private void sendRequest(string s, Form1 form)
+        private void SendRequest(string s, Form1 form)
         {
             HttpClient client = null;
             var handler = GetHandler();
@@ -111,13 +111,13 @@ namespace BruteForce
                 client = new HttpClient();
             }
 
-            var json = "{ \"" + paramName + "\" : \"" + paramValue + "\",  " +
-                " \"" + keyName + "\" : \"" + s + "\"}";
+            var json = "{ \"" + ParamName + "\" : \"" + ParamValue + "\",  " +
+                " \"" + KeyName + "\" : \"" + s + "\"}";
 
-            if (isJson)
+            if (IsJson)
             {
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var r = client.PostAsync(url, content).Result;
+                var r = client.PostAsync(Uri, content).Result;
                 var c = r.Content.ReadAsStringAsync().Result;
                 
                 AddRowToDataGrid addRowToDataGrid = new AddRowToDataGrid(AddRowToDataGridMethod);
@@ -127,11 +127,11 @@ namespace BruteForce
             {
                 var content = new FormUrlEncodedContent(new[]
                 {
-                                new KeyValuePair<string, string>(paramName, paramValue),
-                                new KeyValuePair<string, string>(keyName, s),
+                                new KeyValuePair<string, string>(ParamName, ParamValue),
+                                new KeyValuePair<string, string>(KeyName, s),
                             });
 
-                var r = client.PostAsync(url, content).Result;
+                var r = client.PostAsync(Uri, content).Result;
                 var c = r.Content.ReadAsStringAsync().Result;
                 
                 AddRowToDataGrid addRowToDataGrid = new AddRowToDataGrid(AddRowToDataGridMethod);
@@ -166,18 +166,18 @@ namespace BruteForce
             }
         }
 
-        private void btnSelectFile_Click(object sender, EventArgs e)
+        private void BtnSelectFile_Click(object sender, EventArgs e)
         {
             var result = openFileDialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                file = openFileDialog.FileName;
+                FilePasswords = openFileDialog.FileName;
                 var txtFileName = this.Controls["txtFileName"] as Label;
-                if(txtFileName != null) txtFileName.Text = file;
+                if(txtFileName != null) txtFileName.Text = FilePasswords;
             }
         }
 
-        private void setParameters()
+        private void SetParameters()
         {
             if(this.txtUrl.Text.Equals("") || this.txtParamName.Text.Equals("") || this.txtParamValue.Text.Equals("") || this.txtKeyName.Text.Equals(""))
             {
@@ -185,11 +185,11 @@ namespace BruteForce
             }
             else
             {
-                url = this.txtUrl.Text;
-                paramName = this.txtParamName.Text;
-                paramValue = this.txtParamValue.Text;
-                keyName = this.txtKeyName.Text;
-                isJson = this.checkIsJson.Checked;
+                Uri = this.txtUrl.Text;
+                ParamName = this.txtParamName.Text;
+                ParamValue = this.txtParamValue.Text;
+                KeyName = this.txtKeyName.Text;
+                IsJson = this.checkIsJson.Checked;
                 ProxyIP = this.txtProxyIp.Text;
                 ProxyPORT = this.txtProxyPort.Text;
             }
@@ -199,135 +199,144 @@ namespace BruteForce
         {
             dataGridView.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
         }
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             Console.WriteLine(comboBox1.SelectedIndex);
             Console.WriteLine(comboBox1.SelectedItem);
             if(comboBox1.SelectedIndex == 0)
             {
-
-                this.Controls.RemoveByKey("btnSelectFile");
-                this.Controls.RemoveByKey("txtFileName");
-
-                Label label8 = new Label();
-                Label label9 = new Label();
-                Label label10 = new Label();
-
-                // 
-                // label8
-                // 
-                label8.AutoSize = true;
-                label8.Location = new Point(450, 600);
-                label8.Name = "label8";
-                label8.Size = new Size(34, 17);
-                label8.TabIndex = 48;
-                label8.Text = "Min:";
-                // 
-                // label9
-                // 
-                label9.AutoSize = true;
-                label9.Location = new Point(450, 650);
-                label9.Name = "label9";
-                label9.Size = new Size(37, 17);
-                label9.TabIndex = 47;
-                label9.Text = "Max:";
-                // 
-                // label10
-                // 
-                label10.AutoSize = true;
-                label10.Location = new Point(450, 550);
-                label10.Name = "label10";
-                label10.Size = new Size(141, 17);
-                label10.TabIndex = 46;
-                label10.Text = "Rango de carácteres";
-                NumericUpDown nMin = new NumericUpDown();
-                NumericUpDown nMax = new NumericUpDown();
-
-                ((System.ComponentModel.ISupportInitialize)(nMin)).BeginInit();
-                ((System.ComponentModel.ISupportInitialize)(nMax)).BeginInit();
-                // 
-                // nMin
-                // 
-                nMin.Location = new Point(550, 600);
-                nMin.Minimum = new decimal(new int[] {
-                    4,
-                    0,
-                    0,
-                    0});
-                nMin.Name = "nMin";
-                nMin.Size = new Size(120, 22);
-                nMin.TabIndex = 45;
-                nMin.Value = new decimal(new int[] {
-                    4,
-                    0,
-                    0,
-                    0});
-                // 
-                // nMax
-                // 
-                nMax.Location = new Point(550, 650);
-                nMax.Minimum = new decimal(new int[] {
-                    4,
-                    0,
-                    0,
-                    0});
-                nMax.Name = "nMax";
-                nMax.Size = new Size(120, 22);
-                nMax.TabIndex = 44;
-                nMax.Value = new decimal(new int[] {
-                    4,
-                    0,
-                    0,
-                    0});
-                
-
-                this.Controls.Add(label8);
-                this.Controls.Add(label9);
-                this.Controls.Add(label10);
-                this.Controls.Add(nMin);
-                this.Controls.Add(nMax);
-
-                ((System.ComponentModel.ISupportInitialize)(nMin)).EndInit();
-                ((System.ComponentModel.ISupportInitialize)(nMax)).EndInit();
-
+                PrintCheckBox0();
             }
             else if(comboBox1.SelectedIndex == 1)
             {
-                this.Controls.RemoveByKey("label8");
-                this.Controls.RemoveByKey("label9");
-                this.Controls.RemoveByKey("label10");
-                this.Controls.RemoveByKey("nMin");
-                this.Controls.RemoveByKey("nMax");
-
-                Button btnSelectFile = new Button();
-                Label txtFileName = new Label();
-                // 
-                // btnSelectFile
-                // 
-                btnSelectFile.Anchor = ((AnchorStyles)((AnchorStyles.Top | AnchorStyles.Right)));
-                btnSelectFile.Location = new Point(500, 500);
-                btnSelectFile.Name = "btnSelectFile";
-                btnSelectFile.Size = new Size(126, 37);
-                btnSelectFile.TabIndex = 26;
-                btnSelectFile.Text = "Select file";
-                btnSelectFile.UseVisualStyleBackColor = true;
-                btnSelectFile.Click += new EventHandler(this.btnSelectFile_Click);
-                // 
-                // txtFileName
-                // 
-                txtFileName.Anchor = ((AnchorStyles)((AnchorStyles.Top | AnchorStyles.Right)));
-                txtFileName.BorderStyle = BorderStyle.FixedSingle;
-                txtFileName.FlatStyle = FlatStyle.Flat;
-                txtFileName.Location = new Point(400, 550);
-                txtFileName.Name = "txtFileName";
-                txtFileName.Size = new Size(318, 37);
-                txtFileName.TabIndex = 27;
-                txtFileName.Text = "No se ha seleccionado ningún archivo";
-                txtFileName.TextAlign = ContentAlignment.MiddleCenter;
-
-                this.Controls.Add(btnSelectFile);
-                this.Controls.Add(txtFileName);
+                PrintCheckBox1();
             }
+        }
+
+        private void PrintCheckBox0()
+        {
+            this.Controls.RemoveByKey("btnSelectFile");
+            this.Controls.RemoveByKey("txtFileName");
+
+            Label label8 = new Label();
+            Label label9 = new Label();
+            Label label10 = new Label();
+
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Location = new Point(450, 600);
+            label8.Name = "label8";
+            label8.Size = new Size(34, 17);
+            label8.TabIndex = 48;
+            label8.Text = "Min:";
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Location = new Point(450, 650);
+            label9.Name = "label9";
+            label9.Size = new Size(37, 17);
+            label9.TabIndex = 47;
+            label9.Text = "Max:";
+            // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Location = new Point(450, 550);
+            label10.Name = "label10";
+            label10.Size = new Size(141, 17);
+            label10.TabIndex = 46;
+            label10.Text = "Rango de carácteres";
+            NumericUpDown nMin = new NumericUpDown();
+            NumericUpDown nMax = new NumericUpDown();
+
+            ((System.ComponentModel.ISupportInitialize)(nMin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(nMax)).BeginInit();
+            // 
+            // nMin
+            // 
+            nMin.Location = new Point(550, 600);
+            nMin.Minimum = new decimal(new int[] {
+                    4,
+                    0,
+                    0,
+                    0});
+            nMin.Name = "nMin";
+            nMin.Size = new Size(120, 22);
+            nMin.TabIndex = 45;
+            nMin.Value = new decimal(new int[] {
+                    4,
+                    0,
+                    0,
+                    0});
+            // 
+            // nMax
+            // 
+            nMax.Location = new Point(550, 650);
+            nMax.Minimum = new decimal(new int[] {
+                    4,
+                    0,
+                    0,
+                    0});
+            nMax.Name = "nMax";
+            nMax.Size = new Size(120, 22);
+            nMax.TabIndex = 44;
+            nMax.Value = new decimal(new int[] {
+                    4,
+                    0,
+                    0,
+                    0});
+
+
+            this.Controls.Add(label8);
+            this.Controls.Add(label9);
+            this.Controls.Add(label10);
+            this.Controls.Add(nMin);
+            this.Controls.Add(nMax);
+
+            ((System.ComponentModel.ISupportInitialize)(nMin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(nMax)).EndInit();
+
+        }
+
+        private void PrintCheckBox1()
+        {
+            this.Controls.RemoveByKey("label8");
+            this.Controls.RemoveByKey("label9");
+            this.Controls.RemoveByKey("label10");
+            this.Controls.RemoveByKey("nMin");
+            this.Controls.RemoveByKey("nMax");
+
+            Button btnSelectFile = new Button();
+            Label txtFileName = new Label();
+            // 
+            // btnSelectFile
+            // 
+            btnSelectFile.Anchor = ((AnchorStyles)((AnchorStyles.Top | AnchorStyles.Right)));
+            btnSelectFile.Location = new Point(500, 500);
+            btnSelectFile.Name = "btnSelectFile";
+            btnSelectFile.Size = new Size(126, 37);
+            btnSelectFile.TabIndex = 26;
+            btnSelectFile.Text = "Select file";
+            btnSelectFile.UseVisualStyleBackColor = true;
+            btnSelectFile.Click += new EventHandler(this.BtnSelectFile_Click);
+            // 
+            // txtFileName
+            // 
+            txtFileName.Anchor = ((AnchorStyles)((AnchorStyles.Top | AnchorStyles.Right)));
+            txtFileName.BorderStyle = BorderStyle.FixedSingle;
+            txtFileName.FlatStyle = FlatStyle.Flat;
+            txtFileName.Location = new Point(400, 550);
+            txtFileName.Name = "txtFileName";
+            txtFileName.Size = new Size(318, 37);
+            txtFileName.TabIndex = 27;
+            txtFileName.Text = "No se ha seleccionado ningún archivo";
+            txtFileName.TextAlign = ContentAlignment.MiddleCenter;
+
+            this.Controls.Add(btnSelectFile);
+            this.Controls.Add(txtFileName);
         }
     }
 }

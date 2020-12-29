@@ -64,7 +64,7 @@ namespace BruteForce
             this.btnAttack.TabIndex = 18;
             this.btnAttack.Text = "Attack";
             this.btnAttack.UseVisualStyleBackColor = true;
-            this.btnAttack.Click += new System.EventHandler(this.btnAttack_Click);
+            this.btnAttack.Click += new System.EventHandler(this.BtnAttack_Click);
             // 
             // dataGridView
             // 
@@ -284,7 +284,7 @@ namespace BruteForce
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(276, 24);
             this.comboBox1.TabIndex = 43;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.ComboBox1_SelectedIndexChanged);
             // 
             // label11
             // 
