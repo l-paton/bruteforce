@@ -181,16 +181,15 @@ namespace BruteForce
         {
             using (StreamWriter file = new StreamWriter(@".\\prueba.txt"))
             {
-                for (int row = 0; row < dataGridView.Rows.Count; row++)
+                foreach(DataGridViewRow row in dataGridView.Rows)
                 {
-                    for (int col = 0; col < dataGridView.Rows[row].Cells.Count; col++)
+                    StringBuilder sb = new StringBuilder();
+                    foreach(DataGridViewCell cell in row.Cells)
                     {
-                        if(dataGridView.Rows[row].Cells[col].Value != null)
-                        {
-                            string value = dataGridView.Rows[row].Cells[col].Value.ToString();
-                            file.WriteLine(value);
-                        }
+                        if(cell.Value != null) sb.AppendLine(cell.OwningColumn.HeaderText + ": " + cell.Value.ToString());
                     }
+                    file.WriteLine(sb.ToString());
+                    file.WriteLine("-------------------------------------");
                 }
             }
         }
@@ -371,6 +370,7 @@ namespace BruteForce
                 if (thread.IsAlive)
                 {
                     ButtonsEnabled();
+                    ButtonSaveEnabled();
                     thread.Abort();
                 }
             }
